@@ -14,8 +14,8 @@ YYYY-MM-DD_Dokumenttyp_Absender Stichwort2 Stichwort3.pdf
 ```
 2024-03-15_Rechnung_Amazon Bestellung-12345.pdf
 2023-11-01_Vertrag_Wiener Wohnen Mietvertrag Wien.pdf
-2022-06-30_Kontoauszug_ING-DiBa Girokonto März.pdf
-2017-04-26_Rechnung_Hutchison Drei Hui SIM-Flat-10.pdf
+2022-06-30_Kontoauszug_Trottelbank Girokonto März.pdf
+2017-04-26_Rechnung_T-Mobile Rechnung SIM.pdf
 ```
 
 ---
@@ -31,7 +31,7 @@ YYYY-MM-DD_Dokumenttyp_Absender Stichwort2 Stichwort3.pdf
 
 ## Installation
 
-> **Tipp:** Wer die Einrichtung nicht manuell durchführen möchte, kann stattdessen das mitgelieferte Setup-Skript verwenden — es übernimmt alle nachfolgenden Schritte automatisch. Siehe [Automatische Einrichtung mit setup.sh](#automatische-einrichtung-mit-setupsh).
+> **Tipp:** Wer die Einrichtung nicht manuell durchführen möchte, kann stattdessen das mitgelieferte Setup-Skript verwenden, es übernimmt alle nachfolgenden Schritte automatisch. 
 
 ---
 
@@ -44,7 +44,7 @@ und gibt dabei fortlaufend aus, was es tut.
 
 ### Was das Skript einrichtet
 
-Das Skript führt — mit Bestätigung vor jedem Schritt — folgende Aktionen aus:
+Das Skript führt, mit Bestätigung vor jedem Schritt, folgende Aktionen aus:
 
 | Schritt | Aktion |
 |---|---|
@@ -57,8 +57,7 @@ Das Skript führt — mit Bestätigung vor jedem Schritt — folgende Aktionen a
 | 7 | Die virtuelle Umgebung in der aktuellen Shell-Sitzung **aktivieren** |
 | 8 | **Ollama** im Hintergrund starten (`ollama serve`), falls noch nicht aktiv |
 
-Bereits installierte Komponenten werden automatisch erkannt und übersprungen —
-es wird also nichts doppelt installiert.
+Bereits installierte Komponenten werden automatisch erkannt und übersprungen, es wird also nichts doppelt installiert.
 
 ### Voraussetzungen
 
@@ -77,7 +76,7 @@ chmod +x setup.sh
 
 Das Skript führt durch alle Schritte und fragt bei jeder Installation nach
 einer Bestätigung (`j` für Ja, `n` / Enter für Nein). Wer einen Schritt
-überspringen möchte, antwortet einfach mit `n` — alle übrigen Schritte
+überspringen möchte, antwortet einfach mit `n` alle übrigen Schritte
 werden trotzdem angeboten.
 
 ### Hinweis zur venv-Aktivierung
@@ -114,8 +113,6 @@ python3 -m venv .venv
 # Aktivieren (macOS / Linux)
 source .venv/bin/activate
 
-# Aktivieren (Windows)
-.venv\Scripts\activate
 ```
 
 ### 3. Abhängigkeiten installieren
@@ -124,7 +121,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Dies installiert alle Pakete — inklusive der optionalen OCR-Abhängigkeiten
+Dies installiert alle Pakete inklusive der optionalen OCR-Abhängigkeiten
 `pytesseract`, `pdf2image` und `Pillow`.
 
 ### 4. Tesseract installieren (für gescannte PDFs, empfohlen)
@@ -144,7 +141,7 @@ brew install tesseract tesseract-lang poppler
 | `poppler` | PDF-zu-Bild-Konvertierung für `pdf2image` |
 
 Ist Tesseract nicht installiert, werden gescannte PDFs automatisch übersprungen
-und ein entsprechender Hinweis ausgegeben — der Rest funktioniert weiterhin normal.
+und ein entsprechender Hinweis ausgegeben der Rest funktioniert weiterhin normal.
 
 ### 5. Ollama-Modell herunterladen
 
@@ -215,7 +212,7 @@ python filerenamerkide.py ~/Dokumente/Rechnungen --verbose
 ```
 
 Mit `--verbose` wird zusätzlich der rohe Ollama-Response und eine Textvorschau
-der PDF-Extraktion ausgegeben — nützlich bei der Fehlersuche.
+der PDF-Extraktion ausgegeben nützlich bei der Fehlersuche.
 
 ---
 
@@ -263,39 +260,39 @@ OK    rechnung_april.pdf -> 2024-04-01_Rechnung_Amazon Bestellung-12345 Kindle.p
 ```
 
 **Statuszeilen am Ende:**
-- `OK` — Datei erfolgreich umbenannt
-- `ÜBERSPRUNGEN` — Datei übersprungen (kein extrahierbarer Text)
-- `FEHLER` — Fehler bei der Verarbeitung (z. B. Ollama nicht erreichbar)
+- `OK` Datei erfolgreich umbenannt
+- `ÜBERSPRUNGEN` Datei übersprungen (kein extrahierbarer Text)
+- `FEHLER` Fehler bei der Verarbeitung (z. B. Ollama nicht erreichbar)
 
 **Exit Codes:**
-- `0` — Alle Dateien erfolgreich verarbeitet
-- `1` — Schwerwiegender Fehler (Ollama nicht erreichbar, Pfad nicht gefunden)
-- `2` — Mindestens eine Datei wurde übersprungen
+- `0`: Alle Dateien erfolgreich verarbeitet
+- `1`: Schwerwiegender Fehler (Ollama nicht erreichbar, Pfad nicht gefunden)
+- `2`: Mindestens eine Datei wurde übersprungen
 
 ---
 
 ## Funktionsweise im Detail
 
-1. **PDF-Erkennung** — Das Skript findet alle `.pdf`-Dateien im angegebenen Pfad (optional rekursiv).
-2. **Textextraktion** — Mit `pypdf` wird der eingebettete Text seitenweise extrahiert und auf `--max-chars` Zeichen begrenzt.
-3. **OCR-Fallback** — Enthält die PDF keinen eingebetteten Text (z. B. gescannte Dokumente), werden die Seiten automatisch mit `pdf2image` in Bilder umgewandelt und per Tesseract OCR (Sprache: Deutsch) ausgelesen. Ist das deutsche Sprachpaket nicht installiert, wird auf Englisch zurückgefallen. Fehlen `pytesseract` oder `pdf2image` komplett, wird die Datei übersprungen.
-4. **KI-Analyse** — Der Text wird zusammen mit einem deutschen Prompt an Ollama gesendet. Das Modell gibt ein JSON-Objekt zurück mit:
-   - `date` — Dokumentdatum im Format `YYYY-MM-DD`
-   - `doc_type` — Dokumenttyp auf Deutsch (Rechnung, Vertrag, Kontoauszug, …)
-   - `keywords` — 2–4 Stichworte in festgelegter Reihenfolge: Absender, Kennung, Thema, Detail
-5. **Bereinigung** — Sonderzeichen werden entfernt, Leerzeichen innerhalb eines Stichworts bleiben erhalten. Deutsche Umlaute (ä, ö, ü, Ä, Ö, Ü, ß) bleiben erhalten.
-6. **Kollisionsvermeidung** — Existiert der Zieldateiname bereits, wird automatisch `-2`, `-3` usw. angehängt.
-7. **Umbenennung** — Die Datei wird direkt im selben Ordner umbenannt.
+1. **PDF-Erkennung** Das Skript findet alle `.pdf`-Dateien im angegebenen Pfad (optional rekursiv).
+2. **Textextraktion** Mit `pypdf` wird der eingebettete Text seitenweise extrahiert und auf `--max-chars` Zeichen begrenzt.
+3. **OCR-Fallback** Enthält die PDF keinen eingebetteten Text (z. B. gescannte Dokumente), werden die Seiten automatisch mit `pdf2image` in Bilder umgewandelt und per Tesseract OCR (Sprache: Deutsch) ausgelesen. Ist das deutsche Sprachpaket nicht installiert, wird auf Englisch zurückgefallen. Fehlen `pytesseract` oder `pdf2image` komplett, wird die Datei übersprungen.
+4. **KI-Analyse** Der Text wird zusammen mit einem deutschen Prompt an Ollama gesendet. Das Modell gibt ein JSON-Objekt zurück mit:
+   - `date` Dokumentdatum im Format `YYYY-MM-DD`
+   - `doc_type` Dokumenttyp auf Deutsch (Rechnung, Vertrag, Kontoauszug, …)
+   - `keywords` 2–4 Stichworte in festgelegter Reihenfolge: Absender, Kennung, Thema, Detail
+5. **Bereinigung** Sonderzeichen werden entfernt, Leerzeichen innerhalb eines Stichworts bleiben erhalten. Deutsche Umlaute (ä, ö, ü, Ä, Ö, Ü, ß) bleiben erhalten.
+6. **Kollisionsvermeidung** Existiert der Zieldateiname bereits, wird automatisch `-2`, `-3` usw. angehängt.
+7. **Umbenennung** Die Datei wird direkt im selben Ordner umbenannt.
 
 ---
 
 ## Hinweise und Einschränkungen
 
-- **Gescannte PDFs** werden automatisch per Tesseract OCR verarbeitet, sofern `pytesseract`, `pdf2image` und das Tesseract-Systemtool installiert sind. Fehlen diese, wird die Datei übersprungen.
-- **OCR-Qualität** — Die Erkennungsgenauigkeit von Tesseract hängt von der Scan-Qualität ab. Bei sehr schlechten Scans (niedrige Auflösung, Handschrift) kann die Benennung ungenau ausfallen.
-- **Qualität der Benennung** hängt direkt vom verwendeten Modell und der Qualität des extrahierten Textes ab. Größere Modelle liefern in der Regel bessere Ergebnisse.
+- **Gescannte PDFs** Diese werden automatisch per Tesseract OCR verarbeitet, sofern `pytesseract`, `pdf2image` und das Tesseract-Systemtool installiert sind. Fehlen diese, wird die Datei übersprungen.
+- **OCR-Qualität** Die Erkennungsgenauigkeit von Tesseract hängt von der Scan-Qualität ab. Bei sehr schlechten Scans (niedrige Auflösung, Handschrift) kann die Benennung ungenau ausfallen.
+- **Qualität der Benennung** Hängt direkt vom verwendeten Modell und der Qualität des extrahierten Textes ab. Größere Modelle liefern in der Regel bessere Ergebnisse.
 - **Reasoning-Modelle** (z. B. `qwen3.5`), die ihre Antwort im `thinking`-Feld statt im `response`-Feld zurückgeben, werden automatisch erkannt und unterstützt.
-- **Keine Netzwerkverbindung erforderlich** — das gesamte Modell und OCR laufen lokal auf dem eigenen Rechner.
+- **Keine Netzwerkverbindung erforderlich** Das gesamte Modell und OCR laufen lokal auf dem eigenen Rechner.
 
 ---
 
