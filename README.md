@@ -1,4 +1,4 @@
-# FileRenamer
+# FileRenamer KI_DE
 
 Intelligente PDF-Umbenennung mit einem lokal laufenden KI-Modell (Ollama).
 
